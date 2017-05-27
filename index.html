@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script language="javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js" type="text/javascript"></script>
+</head>
+<body onload="init()">
+<a id="download">Download as image</a>
+<canvas id="canvas" width="1920" height="1080"></canvas>
+
+<!--<link rel="stylesheet" type="text/css" href="mystyle.css">-->
+
+<script>
+
+// Consts
+const NUM_TRACES = 2;
+const UPDATE_RATE_MILLIS = 50;
+const X_SCALE = 0.2; // px/ms
+
+// Vars
+var canvasElement = document.getElementById('canvas');
+var ctx;
+var width = canvasElement.width;
+var height = canvasElement.height;
+var rand = [];
+var col = [];
+var imgBuff;
+var graphWidth = width / 2;
+var currentGraphMillis = new Date().getTime();
+var currentTraceMillis = currentGraphMillis;
+var running = true;
+var gradients = [];
+
+/////////////////////////////////////////////////////////////////////
+
+function perlin2(x)
+{
+	var base = Math.floor(x);
+	
+	var bottom = gradients[base];
+	var top = gradients[base+1];
+
+	//console.log(x +", " + (x-base) + ", " + ((base+1)-x));
+	return bottom*((base+1)-x) + top*(x-base);
+}
+
+function HSVtoRGB(h, s, v)
+{
+	
+    var r, g, b, i, f, p, q, t;
+    if (arguments.length === 1) {
+        s = h.s, v = h.v, h = h.h;
+    }
+    i = Math.floor(h * 6);
+    f = h * 6 - i;
+    p = v * (1 - s);
+    q = v * (1 - f * s);
+    t = v * (1 - (1 - f) * s);
+    switch (i % 6) {
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+    }
+    return '#' + Math.round(r * 255).toString( 16 ) + '' + Math.round(g * 255).toString( 16 ) + '' + Math.round(g * 255).toString( 16 );
+}
+
+function init()
+{
+	// Obtain reference to canvas context
+	ctx = canvasElement.getContext("2d");
+ 
+	// Initialize some common drawing attributes
+	ctx.lineWidth = 1;
+	ctx.imageSmoothingEnabled = false;
+
+	// Start rendering at the native frame rate
+	//requestAnimationFrame(render);
+	
+	// Update every "UPDATE_RATE_MILLIS" milliseconds
+/*
+	setInterval( function()
+	{
+		// Called iteratively
+		if ( running )
+		{
+			update();
+		}
+		
+	}, 50 );
+*/
+
+	//canvasElement.addEventListener( 'click', doMouseDown, false );
+	document.getElementById('download').addEventListener('click', function() {
+    		downloadCanvas(this, 'canvas', 'test.png');
+	}, false);
+
+	// Iterate over width of the canvas drawing noise as we go
+	var MAXSTAGES = 10;
+	var SPACING = 10;
+	var resCeil = 128;
+	var resFloor = 4;
+
+	var hue	= Math.random();
+
+	ctx.fillStyle = "#ffffff";
+    	ctx.fillRect(0,0,width,height);
+
+	for(var stages = 0; stages < MAXSTAGES; stages++)
+	{
+		gradients = [];
+		// Pre-populate an array of random values between -1 and 1
+		for(var i=0; i<width; i++)
+		{
+			gradients.push(2*(Math.random()-0.5));
+		}
+		var xp;
+
+		ctx.beginPath();
+		for(xp=0; xp<width; xp++)
+		{
+			var yp = 0;
+			for(var resolution = resCeil; resolution >= resFloor; resolution /= 2)
+			{
+				yp += ((height-yp)*(height-yp)/3000000)*resolution*perlin2(xp/resolution);
+				resolution /= 2;
+			}
+			
+			stdoffset = height/3;
+			valley = 0.0001 * (xp - (width/2)) * (xp - (width/2));			
+			spacing = SPACING * Math.pow(2,stages);//(stages-MAXSTAGES/2)*SPACING;
+
+			if(xp == 0)
+				ctx.moveTo(xp, yp + stdoffset + spacing - valley);
+			else
+				ctx.lineTo(xp, yp + stdoffset + spacing - valley);
+	
+		}
+
+		ctx.lineTo(width, height);
+		ctx.lineTo(0, height);
+		//ctx.fillStyle='#' + Math.floor( Math.random() * 16777215 ).toString( 16 );
+		ctx.fillStyle=HSVtoRGB(hue, stages/MAXSTAGES, 1-stages/MAXSTAGES);
+		//ctx.strokeStyle = '#000000';
+		ctx.fill();
+		//ctx.stroke();
+	}
+}
+
+/**
+ * This is the function that will take care of image extracting and
+ * setting proper filename for the download.
+ * IMPORTANT: Call it from within a onclick event.
+*/
+function downloadCanvas(link, canvasId, filename) {
+    link.href = document.getElementById(canvasId).toDataURL();
+    link.download = filename;
+}
+
+function doMouseDown()
+{
+	console.log("click");
+	downloadCanvas(this, 'canvas', 'mountains.png');
+
+	if ( running )
+		running = false;
+	else
+	{	
+		running = true;
+		//requestAnimationFrame(render);
+	}
+	
+}
+
+function update()
+{
+	var currentTime = new Date().getTime();
+	var xpos;
+	
+	if ( X_SCALE * ( currentTime - currentTraceMillis ) > graphWidth )
+	{
+		currentTraceMillis = currentTime - ( X_SCALE * graphWidth );
+		currentGraphMillis = currentTraceMillis;
+	}
+	
+	while ( currentTraceMillis < currentTime )
+	{
+		xpos = graphWidth + X_SCALE*( currentTraceMillis - currentGraphMillis );
+	
+		if ( Math.floor( xpos ) == xpos )
+		{
+			for( var i = 0; i < NUM_TRACES; i ++ )
+			{	
+				// Start drawing the line
+				ctx.beginPath();	
+				ctx.moveTo( xpos - X_SCALE, height/2 - Math.floor( rand[i] ) );
+				
+				// Update trace value by random amount
+				rand[i] += 10 * ( Math.random() - 0.5 );
+				
+				// Complete the line
+				ctx.lineTo( xpos, height/2 - Math.floor( rand[i] ) );
+				ctx.strokeStyle = col[i];
+				ctx.stroke();
+			}
+		}
+		
+		currentTraceMillis ++;
+	}
+}
+
+/////////////////////////////////////////////////////////////////////
+function render()
+{
+	// Uncomment to run at animation frame rate (comment out the setInterval call above first!)
+	if (running)
+	{
+		requestAnimationFrame(render);
+	}
+	
+	if ( currentTraceMillis > currentGraphMillis )
+	{
+		var delta = X_SCALE* (currentTraceMillis - currentGraphMillis);
+	
+		// Take snapshot of entire canvas
+		imgBuff = ctx.getImageData( 0, 0, width, height );
+	
+		// Clear everything
+		ctx.clearRect( 0, 0, width, height);
+		
+		// Draw captured snapshot of canvas but moved "X_SCALE" px to the left
+		ctx.putImageData( imgBuff, -delta, 0 );
+		
+		// Clear the right most column of pixels
+		//ctx.clearRect( graphwidth, 0, delta, height);
+		
+		currentGraphMillis = currentTraceMillis;
+	}
+}
+
+
+
+
+
+
+</script>
+
+</body>
+</html>
