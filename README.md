@@ -1,4 +1,3 @@
-# Landscape
-Procedurally generated landscapes
+# landscape
 
-Creates a procedurally generated 2D landscape using perlin noise.
+Procedurally generated landscape wallpaper generator.
