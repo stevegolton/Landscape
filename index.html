@@ -11,7 +11,7 @@
 // Consts
 var MAXSTAGES = 10;
 var SPACING = 10;
-var resCeil = 128;
+var resCeil = 64;
 var resFloor = 4;
 
 // Vars
@@ -50,6 +50,8 @@ function init()
 	// Draw various mountain ranges
 	for(var stages = 0; stages < MAXSTAGES; stages++)
 	{
+		resCeil*=1.2;
+		resFloor*=1.2;
 		var gradients = [];
 		// Pre-populate an array of random values between -1 and 1
 		for(var i=0; i<width; i++)
@@ -67,6 +69,9 @@ function init()
 				yp += ((height-yp)*(height-yp)/3000000)*resolution*perlin2(xp/resolution, gradients);
 				resolution /= 2;
 			}
+			if(yp > 0)
+				yp += (yp*0.8)*perlintrees(xp/stages+1);
+			//yp += 10*raggeddiness(xp);
 			
 			stdoffset = height/3;
 			valley = 0.0001 * (xp - (width/2)) * (xp - (width/2));			
@@ -86,7 +91,7 @@ function init()
 	}
 }
 
-// Generates 2D perlin noise
+// Generates 2D perlin(ish) noise - uses linear interpolation instread of cosine.
 function perlin2(x, gradients)
 {
 	var base = Math.floor(x);
@@ -95,6 +100,21 @@ function perlin2(x, gradients)
 	var top = gradients[base+1];
 
 	return bottom*((base+1)-x) + top*(x-base);
+}
+
+function perlintrees(x)
+{
+	var modulo = 4;
+	var y = (x%modulo);
+	if(y>modulo/2)
+		y = modulo-y;
+	return y/modulo;
+}
+
+function raggeddiness(x)
+{
+	var modulo = 100;
+	return (x%modulo)/modulo;
 }
 
 // Converts from HSV to RGB
