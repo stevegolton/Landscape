@@ -103,9 +103,17 @@ function init()
 	var resFloor = 4;
 
 	var hue	= Math.random();
+	//hue = 0.9;	
 
-	ctx.fillStyle = "#ffffff";
+	// Draw background
+//	ctx.fillStyle = "#ffffff";
+	ctx.fillStyle = HSVtoRGB(hue, 0.1, 0.9);
     	ctx.fillRect(0,0,width,height);
+
+	// Draw sun
+	ctx.arc(Math.random()*width, Math.random()*(height/4), 100, 0, 2 * Math.PI, false);
+	ctx.fillStyle='#ffffff';
+	ctx.fill();
 
 	for(var stages = 0; stages < MAXSTAGES; stages++)
 	{
@@ -141,7 +149,7 @@ function init()
 		ctx.lineTo(width, height);
 		ctx.lineTo(0, height);
 		//ctx.fillStyle='#' + Math.floor( Math.random() * 16777215 ).toString( 16 );
-		ctx.fillStyle=HSVtoRGB(hue, stages/MAXSTAGES, 1-stages/MAXSTAGES);
+		ctx.fillStyle=HSVtoRGB(hue, (stages+1)/MAXSTAGES, 1-((stages+1)/MAXSTAGES));
 		//ctx.strokeStyle = '#000000';
 		ctx.fill();
 		//ctx.stroke();
