@@ -70,7 +70,7 @@ function init()
 				resolution /= 2;
 			}
 			if(yp > 0)
-				yp += (yp*0.8)*perlintrees(xp/stages+1);
+				yp += yp*((1/((MAXSTAGES-stages)*(MAXSTAGES-stages)))*10)*perlintrees(xp/stages+1);
 			//yp += 10*raggeddiness(xp);
 			
 			stdoffset = height/3;
