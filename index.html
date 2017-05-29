@@ -43,9 +43,36 @@ function init()
     	ctx.fillRect(0,0,width,height);
 
 	// Draw sun as a white circle
-	ctx.arc(Math.random()*width, Math.random()*(height/4), 100, 0, 2 * Math.PI, false);
+	//ctx.arc(Math.random()*width, Math.random()*(height/4), Math.random()*100, 0, 2 * Math.PI, false);
+	var size = 20 + Math.random()*60;
+	var sunx = Math.random()*(width-size*2) + size;
+	var suny = Math.random()*(height/4) + size;
+	var fullness = Math.random()*0.6 + 0.2;
+
+	if(Math.random() > 0.5)
+	{
+		// Do sun
+		ctx.arc(sunx, suny, size, 0, 2*Math.PI, false);
+	}
+	else
+	{
+		// Do moon
+
+		
+	
+		ctx.save();
+		ctx.translate(sunx, suny);
+		ctx.rotate(-Math.random()*Math.PI);
+		ctx.arc(0, 0, size, 0.5*Math.PI, -0.5*Math.PI, false);
+		ctx.save() ;
+		ctx.scale(fullness,1);
+		ctx.arc(0, 0, size, -0.5*Math.PI, 0.5*Math.PI, true);       
+		ctx.restore();
+		ctx.restore();
+	}
+
 	ctx.fillStyle='#ffffff';
-	ctx.fill();
+	ctx.fill();	
 
 	// Draw various mountain ranges
 	for(var stages = 0; stages < MAXSTAGES; stages++)
@@ -69,12 +96,12 @@ function init()
 				yp += ((height-yp)*(height-yp)/3000000)*resolution*perlin2(xp/resolution, gradients);
 				resolution /= 2;
 			}
-			if(yp > 0)
-				yp += yp*((1/((MAXSTAGES-stages)*(MAXSTAGES-stages)))*10)*perlintrees(xp/stages+1);
+			//if(yp > 0)
+			//	yp += yp*((1/((MAXSTAGES-stages)*(MAXSTAGES-stages)))*10)*perlintrees(xp/stages+1);
 			//yp += 10*raggeddiness(xp);
 			
 			stdoffset = height/3;
-			valley = 0.0001 * (xp - (width/2)) * (xp - (width/2));			
+			valley = stages * 0.00003 * (xp - (width/2)) * (xp - (width/2));			
 			spacing = SPACING * Math.pow(2,stages);//(stages-MAXSTAGES/2)*SPACING;
 
 			if(xp == 0)
